@@ -1,14 +1,24 @@
-require("dotenv").config()
-const http = require("http"); 
+require('dotenv').config();
+const express = require('express');
+const app = express();
+const port = process.env.PORT;
 
+app.use(express.static('public'));
 
-function requestController(){
-    console.log("Hola!!!!");
-}
+//Configurar rutas
 
-const server = http.createServer(requestController)
-const PORT = process.env.PORT;
- 
-server.listen(PORT, function(){
-    console.log("Server corriendo bien en el puerto: " + PORT);
-});
+app.get('/',(req, res)=>{
+    res.send('Hola');
+})
+
+app.get('/about',(req, res)=>{
+    res.send('Hola desde about');
+})
+
+app.get('/users',(req, res)=>{
+    res.send([{name:"Sergio"}, {name: "Alex"}, {name: "María"}]);
+})
+
+app.listen(port,()=>{
+    console.log(`Servidor corriendo en el puerto: ${port}`);
+})
