@@ -47,7 +47,7 @@ function getTasks(){
                         method: "DELETE",
                     }).then(()=>{
                         const taskDiv = deleteTask.parentElement;
-                        taskDiv.remove();
+                        taskDiv.remove()
                     })
                 })
                 taskParahraph.addEventListener('click', (e)=>{
