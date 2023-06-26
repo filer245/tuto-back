@@ -62,7 +62,11 @@ app.put('/api/tasks/:id', (req,res)=>{
 
 app.delete('/api/tasks/:id', (req,res)=>{
     const id = req.params.id;
-    
+    Task.findByIdAndDelete(id).then((deletedTask)=>{
+        res.status(200).json({ok: true, message: "Tarea eliminada con éxito", data: deletedTask})
+    }).catch((err)=>{
+        res.status(400).json({ok: false, message: "Error al eliminar la tarea"});
+    })
 })
 
-app.listen(port,()=>{console.log(`Servidor corriendo en el puerto: ${port}. Dirname: ${__dirname}`)})
+app.listen(port,()=>{console.log(`Servidor corriendo en el puerto: ${port}. Dirname: ${__dirname}.`)})
