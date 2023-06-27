@@ -4,6 +4,8 @@ const app = express();
 const port = process.env.PORT;
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const transporter = require('./helpers/mailer')
+const jwt = require('jsonwebtoken');
 
 mongoose.connect(process.env.MONGODB_URL).then((e)=>{
         console.log("Conexión exitosa al DB");
@@ -17,10 +19,19 @@ const taskSchema = new Schema({
     //createdBy:
 })
 
+const userSchema = new Schema({
+    firstname: String,
+    lastname: String,
+    email: String,
+    loginCode: String,
+})
+
 const Task = mongoose.model("Task", taskSchema, "Tasks");
+const User = mongoose.model("User", userSchema, "Users");
+
 
 //Middleware archivos estáticos
-app.use(express.static('public'));
+app.use(express.static('public', {extensions: ["html", "css", "js"]}));
 
 //Middleware parseador del body de las req
 app.use(express.json())
@@ -69,4 +80,50 @@ app.delete('/api/tasks/:id', (req,res)=>{
     })
 })
 
-app.listen(port,()=>{console.log(`Servidor corriendo en el puerto: ${port}. Dirname: ${__dirname}.`)})
+app.post('/api/auth/login/:email/code',async function (req, res) {
+    const { email } = req.params;
+
+    const user = await User.findOne({ email });
+
+    if(!user){
+        // await User.create({email, firstname: "Sergio", lastname: "Paniagua"});
+        return res.status(400).json({ok: false, message: "No existe."});
+    }
+
+    let code = "";
+
+    for (let index = 0; index <= 5; index++) {
+        let character = Math.ceil(Math.random()*9);
+        code += character;
+    }
+
+    console.log({code});
+
+    user.loginCode = code;
+    await user.save();
+
+    const result = await transporter.sendMail({
+        from: `Sergio Paniagua ${process.env.EMAIL}`,
+        to: email,
+        subject: `Tu código es: ${code}`,
+        body: "Tu codico de inicio de sesión."
+    })
+    console.log({result});
+    res.status(200).json({ok: true, message: "Código enviado"});
+})
+
+app.post('/api/auth/login/:email',async function (req, res) {
+    const { email } = req.params;
+    const { code } = req.body;
+
+    const user = await User.findOne({ email, loginCode: code });
+
+    if(!user){
+        // await User.create({email, firstname: "Sergio", lastname: "Paniagua"});
+        return res.status(400).json({ok: false, message: "Credenciales inválidas"});
+    } 
+
+    res.status(200).json({ok: true, message: "Inicio exitoso"});
+})
+
+app.listen(port,function () {console.log(`Servidor corriendo en el puerto: ${port}. Dirname: ${__dirname}.`)})
